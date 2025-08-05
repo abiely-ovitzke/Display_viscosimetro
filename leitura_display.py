@@ -31,8 +31,8 @@ matrizes_referencia = {
     '.': [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,1,1,0,0],[0,1,1,0,0]]
 }
 
-def processar_imagem(imagem_path):
-    image = cv2.imread(imagem_path)
+def processar_imagem(image):
+    # image = cv2.imread(imagem_path)
     image_blue = image[:,:,0]
     image_blue[image_blue > 100] = 255
     image_blue[image_blue <= 100] = 0
@@ -72,9 +72,9 @@ def processar_imagem(imagem_path):
     x, y, w, h = cv2.boundingRect(box)
     warped = rotated[y:y+h, x:x+w]
 
-    cropped = warped[85:h-87, 487:w-366]
+    cropped = warped[78:h-96, 575:w-417]
     # cropped = warped[90:h - 87, 507:w - 367]
-    # cropped = warped[0:h - 0, 0:w - 0]
+
     return cropped
 
 def salvar_csv(tempo, viscosidade, caminho_csv):
@@ -87,8 +87,8 @@ def salvar_csv(tempo, viscosidade, caminho_csv):
             writer.writerow(header)
         writer.writerow([tempo, viscosidade])
 
-def carregar_e_converter_para_matriz(path_imagem, linhas=34, colunas=59, percentual_min=0.4):#path_imagem no lugar de img
-    img = cv2.imread(path_imagem)
+def carregar_e_converter_para_matriz(img, linhas=34, colunas=59, percentual_min=0.4):#path_imagem no lugar de img
+    # img = cv2.imread(path_imagem)
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     _, img_bin = cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
@@ -155,23 +155,17 @@ try:
 
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         caminho_frame = os.path.join(pasta_frames, f"frame_{timestamp}.jpg")
-        cv2.imwrite(caminho_frame, frame)# verificar
+        cv2.imwrite(caminho_frame, frame)
 
         try:
-            imagem_processada = processar_imagem(caminho_frame)#caminho_frame
+            imagem_processada = processar_imagem(frame)
             imagem_caminho = os.path.join(pasta_destino, f"processado_{timestamp}.jpg")
             cv2.imwrite(imagem_caminho, imagem_processada)
 
-            matriz_bin = carregar_e_converter_para_matriz(imagem_caminho)#imagem_caminho
+            matriz_bin = carregar_e_converter_para_matriz(imagem_processada)
             simbolos = identificar_sequencia(matriz_bin, regioes)
             valor_str = "".join(s.replace("vazio", "0") for s in simbolos)
 
-            # try:
-            #     viscosidade = float(valor_str)
-            #     print(f"[{timestamp}] Viscosidade identificada: {viscosidade} cP")
-            #     salvar_csv(timestamp, viscosidade, arquivo_csv)
-            # except ValueError:
-            #     print(f"[{timestamp}] Valor inválido lido: {valor_str}")
             try:
                  viscosidade = float(valor_str)
                  print(f"[{contador_segundos}][{timestamp}]  Viscosidade identificada: {viscosidade} cP")
